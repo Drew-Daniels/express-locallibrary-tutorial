@@ -188,7 +188,30 @@ exports.book_delete_get = function(req, res) {
 
 // Handle book delete on POST.
 exports.book_delete_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Book delete POST');
+    // find book and all book instances
+    async.parallel({
+        book: function(callback) {
+            Book.findById(req.body.id).exec(callback)
+        },
+        book_instances: function(callback) {
+            BookInstance.find({ 'book': req.body.id }).exec(callback)
+        },
+    }, function(err, results) {
+        if (err) { return next(err); }
+        // Book has book instances. Render in same way as for GET route.
+        if (results.book_instances.length > 0) {
+            res.render('book_delete', {title: 'Delete Book', book: results.book, book_instances: results.book_instances})
+            return;
+        }
+        else {
+            // Book has no book instances. Delete the object and redirect to the list of books
+            Book.findByIdAndDelete(req.body.bookid, function deleteBook(err) {
+                if (err) { return next(err); }
+                // Success - go to book list
+                res.redirect('/catalog/books');
+            })
+        }
+    })
 };
 
 // Display book update form on GET.
