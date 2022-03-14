@@ -12,6 +12,10 @@ var BookInstanceSchema = new Schema(
   }
 );
 
+function htmlDateFormatter(date) {
+  return date ? DateTime.fromJSDate(date).toFormat('yyyy-MM-dd'): '';
+}
+
 // Virtual for bookinstance's URL
 BookInstanceSchema
 .virtual('url')
@@ -23,6 +27,11 @@ BookInstanceSchema
 .get(function () {
   return DateTime.fromJSDate(this.due_back).toLocaleString(DateTime.DATE_MED);
 });
+BookInstanceSchema
+.virtual('due_back_formatted_html')
+.get(function() {
+  return htmlDateFormatter(this.due_back);
+})
 
 
 //Export model

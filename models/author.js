@@ -16,6 +16,10 @@ function dateFormatter(date) {
   return date ? DateTime.fromJSDate(date).toLocaleString(DateTime.DATE_MED) : '';
 }
 
+function htmlDateFormatter(date) {
+  return date ? DateTime.fromJSDate(date).toFormat('yyyy-MM-dd'): '';
+}
+
 // Virtual for author's full name
 AuthorSchema
 .virtual('name')
@@ -60,12 +64,22 @@ AuthorSchema
 .virtual('date_of_death_formatted')
 .get(function() {
   return dateFormatter(this.date_of_death);
-})
+});
 AuthorSchema
 .virtual('lifespan')
 .get(function() {
   return this.get('date_of_birth_formatted') + ' - ' + this.get('date_of_death_formatted');
-})
+});
+AuthorSchema
+.virtual('date_of_birth_formatted_html')
+.get(function() {
+  return htmlDateFormatter(this.date_of_birth);
+});
+AuthorSchema
+.virtual('date_of_death_formatted_html')
+.get(function() {
+  return htmlDateFormatter(this.date_of_death);
+});
 
 //Export model
 module.exports = mongoose.model('Author', AuthorSchema);
