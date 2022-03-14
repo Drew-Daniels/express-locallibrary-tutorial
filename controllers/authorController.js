@@ -142,10 +142,56 @@ exports.author_delete_post = function(req, res, next) {
 
 // Display Author update form on GET.
 exports.author_update_get = function(req, res) {
-    res.send('NOT IMPLEMENTED: Author update GET');
+    
+    Author.findById(req.params.id).exec(function(err, author) {
+        if (err) { return next(err); }
+        if (author == null) {
+            let err = new Error('Author not found');
+            err.status = 404;
+            return next(err);
+        }
+        // Success
+        res.render('author_form', {title: 'Update Author', author: author});
+    });
 };
 
 // Handle Author update on POST.
-exports.author_update_post = function(req, res) {
-    res.send('NOT IMPLEMENTED: Author update POST');
-};
+exports.author_update_post = [
+    // Validate and sanitize fields
+    body('first_name', 'First Name must not be empty').trim().isLength({ min: 1 }).escape(),
+    body('family_name', 'Family Name must not be empty').trim().isLength({ min: 1 }).escape(),
+
+    // Process request after validation and sanitization
+    (req, res, next) => {
+        
+        // Extract the validation errors from a request.
+        const errors = validationResult(req);
+
+        // Create an Author object with escaped/trimmed data and old id
+        const author = new Author({
+            first_name: req.body.first_name,
+            family_name: req.body.family_name,
+            date_of_birth: req.body.date_of_birth,
+            date_of_death: req.body.date_of_death,
+            _id: req.params.id,
+        });
+
+        if (!errors.isEmpty()) {
+            // There are errors. Render the form again with sanitized values/error messages.
+
+            // Get author to send to form with errors
+            Author.findById(req.params.id).exec(function(err, author) {
+                if (err) { return next(err); }
+                res.render('author_form', {title: 'Update Author', author: author, errors: errors.array()});
+            });
+        }
+        else {
+            // Data from form is valid. Update the document.
+            Author.findByIdAndUpdate(req.params.id, author, {}, function(err, theauthor) {
+                if (err) { return next(err); }
+                    // Successful - redirect to book detail page
+                    res.redirect(theauthor.url);
+            });
+        }
+    }
+]
